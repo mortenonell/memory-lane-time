@@ -1,6 +1,13 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { CalendarPlus, Link2, Loader2, CalendarDays } from "lucide-react";
+import {
+  CalendarPlus,
+  Link2,
+  Loader2,
+  CalendarDays,
+  Smartphone,
+  BellRing,
+} from "lucide-react";
 import { toast } from "sonner";
 import { Toaster } from "@/components/ui/sonner";
 import { Button } from "@/components/ui/button";
@@ -15,6 +22,7 @@ import { importIcsCalendar } from "@/lib/ics.functions";
 import wall1 from "@/assets/wall-1.jpg";
 import wall2 from "@/assets/wall-2.jpg";
 import wall3 from "@/assets/wall-3.jpg";
+
 
 export const Route = createFileRoute("/")({
   head: () => ({
