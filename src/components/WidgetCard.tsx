@@ -1,4 +1,5 @@
-import { Bell, BellOff, Pencil, Trash2 } from "lucide-react";
+import { Bell, BellOff, Maximize2, Pencil, Trash2 } from "lucide-react";
+import { Link } from "@tanstack/react-router";
 import { countdownLabel, preciseRemaining, type WidgetEvent } from "@/lib/countdown";
 
 type Props = {
