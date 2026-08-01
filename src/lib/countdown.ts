@@ -17,12 +17,48 @@ export type WidgetEvent = {
 
 export type WallpaperInterval = "1" | "5" | "10" | "15" | "launch";
 
+export type WallpaperAlbum = {
+  id: string;
+  name: string;
+  photos: string[]; // image urls
+};
+
 export type WallpaperSettings = {
   enabled: boolean;
   interval: WallpaperInterval;
-  album: string[]; // image urls
+  albums: WallpaperAlbum[];
+  activeAlbumId: string | null;
   current: string | null;
 };
+
+/** Photos of the album currently selected for rotation. */
+export function activeAlbumPhotos(s: WallpaperSettings): string[] {
+  return s.albums.find((a) => a.id === s.activeAlbumId)?.photos ?? [];
+}
+
+/** Upgrade older saved settings that stored one flat list of photos. */
+export function normalizeWallpaper(s: WallpaperSettings, fallback: WallpaperSettings) {
+  if (Array.isArray(s.albums) && s.albums.length) {
+    return {
+      ...s,
+      activeAlbumId: s.albums.some((a) => a.id === s.activeAlbumId)
+        ? s.activeAlbumId
+        : s.albums[0]!.id,
+    };
+  }
+  const legacy = (s as unknown as { album?: string[] }).album;
+  if (Array.isArray(legacy) && legacy.length) {
+    const album: WallpaperAlbum = { id: uid(), name: "My album", photos: legacy };
+    return {
+      enabled: s.enabled,
+      interval: s.interval,
+      albums: [album],
+      activeAlbumId: album.id,
+      current: s.current,
+    };
+  }
+  return fallback;
+}
 
 export const UNIT_LABELS: Record<TimeUnit, [string, string]> = {
   days: ["day", "days"],
