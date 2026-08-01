@@ -186,14 +186,19 @@ function Home() {
     return () => clearInterval(t);
   }, []);
 
+  // Migrate older saved settings (flat photo list) into an album.
+  useEffect(() => {
+    if (!wallpaperHydrated) return;
+    setWallpaper((prev) => normalizeWallpaper(prev, DEFAULT_WALLPAPER));
+  }, [wallpaperHydrated, setWallpaper]);
+
   const shuffle = useCallback(() => {
     setWallpaper((prev) => {
-      if (prev.album.length === 0) return prev;
-      const pool = prev.album.filter((a) => a !== prev.current);
-      const next = (pool.length ? pool : prev.album)[
-        Math.floor(Math.random() * (pool.length ? pool.length : prev.album.length))
-      ]!;
-      return { ...prev, current: next };
+      const photos = activeAlbumPhotos(prev);
+      if (photos.length === 0) return prev;
+      const pool = photos.filter((a) => a !== prev.current);
+      const from = pool.length ? pool : photos;
+      return { ...prev, current: from[Math.floor(Math.random() * from.length)]! };
     });
   }, [setWallpaper]);
 
