@@ -13,6 +13,7 @@ import {
 import { useRef, useState } from "react";
 import { toast } from "sonner";
 import type { WallpaperInterval, WallpaperSettings } from "@/lib/countdown";
+import { isNative, pickNativePhotos } from "@/lib/native";
 
 type Props = {
   settings: WallpaperSettings;
