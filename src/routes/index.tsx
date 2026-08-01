@@ -259,17 +259,26 @@ function Home() {
               Everything you're waiting for
             </h1>
           </div>
-          <Button
-            size="lg"
-            className="gap-2"
-            onClick={() => {
-              setEditing(null);
-              setDialogOpen(true);
-            }}
-          >
-            <CalendarPlus className="size-4" /> New widget
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            <Button variant="outline" className="gap-2" onClick={askNotifications}>
+              <BellRing className="size-4" /> Allow notifications
+            </Button>
+            <Button variant="secondary" className="gap-2" onClick={installApp}>
+              <Smartphone className="size-4" /> {canInstall ? "Install app" : "Add to home screen"}
+            </Button>
+            <Button
+              size="lg"
+              className="gap-2"
+              onClick={() => {
+                setEditing(null);
+                setDialogOpen(true);
+              }}
+            >
+              <CalendarPlus className="size-4" /> New widget
+            </Button>
+          </div>
         </header>
+
 
         <section className="mt-10 grid gap-5 sm:grid-cols-2">
           {sorted.map((event) => (
