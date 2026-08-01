@@ -53,7 +53,13 @@ export const Route = createFileRoute("/")({
   component: Home,
 });
 
-const DEFAULT_ALBUM = [wall1, wall2, wall3];
+const DEFAULT_WALLPAPER: WallpaperSettings = {
+  enabled: true,
+  interval: "launch",
+  albums: [{ id: "default-album", name: "Lovable minimal", photos: [wall1, wall2, wall3] }],
+  activeAlbumId: "default-album",
+  current: wall1,
+};
 
 const seedEvents = (): WidgetEvent[] => {
   const soon = (days: number) => new Date(Date.now() + days * 86_400_000).toISOString();
