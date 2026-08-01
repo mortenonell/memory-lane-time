@@ -37,9 +37,11 @@ jobs:
 
       - name: Build web bundle
         run: npm run build
-
+        
       - name: Add Android platform
-        run: npx cap add android || npx cap sync android
+        run: |
+          npx cap add android
+           npx cap sync android
 
       - name: Target Android 13+ (OxygenOS 13.1+)
         run: |
