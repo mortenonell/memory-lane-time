@@ -1,3 +1,4 @@
+ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true
 import { createStart, createCsrfMiddleware, createMiddleware } from "@tanstack/react-start";
 
 import { renderErrorPage } from "./lib/error-page";
