@@ -1,29 +1,31 @@
 name: Build Android APK
 
-# Builds a downloadable APK. Run it from the GitHub "Actions" tab
-# (Build Android APK > Run workflow), or push to main.
 on:
   workflow_dispatch:
   push:
     branches: [main]
 
-env:
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
-  
 permissions:
   contents: write
 
 jobs:
   apk:
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
-          node-version: 20
+          node-version: 24
+          cache: npm
 
-      - uses: actions/setup-java@v4
+      - name: Verify Node
+        run: |
+          node -v
+          npm -v
+
+      - uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: 17
@@ -62,9 +64,9 @@ jobs:
       - name: Add runtime permissions to manifest
         run: |
           python3 - <<'EOF'
-          import re
           p = "android/app/src/main/AndroidManifest.xml"
           s = open(p).read()
+
           perms = [
               "android.permission.POST_NOTIFICATIONS",
               "android.permission.READ_MEDIA_IMAGES",
@@ -72,9 +74,15 @@ jobs:
               "android.permission.RECEIVE_BOOT_COMPLETED",
               "android.permission.INTERNET",
           ]
-          block = "\n".join(f'    <uses-permission android:name="{x}" />' for x in perms if x not in s)
+
+          block = "\n".join(
+              f'    <uses-permission android:name="{x}" />'
+              for x in perms if x not in s
+          )
+
           if block:
               s = s.replace("</manifest>", block + "\n</manifest>")
+
           open(p, "w").write(s)
           EOF
 
@@ -82,16 +90,17 @@ jobs:
         run: npx cap sync android
 
       - name: Assemble debug APK
-        run: cd android && chmod +x gradlew && ./gradlew assembleDebug
+        run: |
+          cd android
+          chmod +x gradlew
+          ./gradlew assembleDebug
 
-      - name: Upload APK artifact
-        uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v4
         with:
           name: countdown-widgets-apk
           path: android/app/build/outputs/apk/debug/app-debug.apk
 
-      - name: Publish APK to a downloadable release
-        uses: softprops/action-gh-release@v2
+      - uses: softprops/action-gh-release@v2
         with:
           tag_name: apk-${{ github.run_number }}
           name: Countdown Widgets APK ${{ github.run_number }}
