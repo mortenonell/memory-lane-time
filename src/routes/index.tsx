@@ -100,12 +100,10 @@ const seedEvents = (): WidgetEvent[] => {
 function Home() {
   const [events, setEvents] = useLocalState<WidgetEvent[]>("cw:events", []);
   const [seeded, setSeeded] = useLocalState<boolean>("cw:seeded", false);
-  const [wallpaper, setWallpaper] = useLocalState<WallpaperSettings>("cw:wallpaper", {
-    enabled: true,
-    interval: "launch",
-    album: DEFAULT_ALBUM,
-    current: DEFAULT_ALBUM[0]!,
-  });
+  const [wallpaper, setWallpaper, wallpaperHydrated] = useLocalState<WallpaperSettings>(
+    "cw:wallpaper",
+    DEFAULT_WALLPAPER,
+  );
   const [now, setNow] = useState(() => Date.now());
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<WidgetEvent | null>(null);
