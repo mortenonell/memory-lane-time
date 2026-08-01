@@ -105,6 +105,39 @@ function Home() {
   const [icsUrl, setIcsUrl] = useState("");
   const [syncing, setSyncing] = useState(false);
   const notified = useRef<Set<string>>(new Set());
+  const installPrompt = useRef<{ prompt: () => Promise<void> } | null>(null);
+  const [canInstall, setCanInstall] = useState(false);
+
+  useEffect(() => {
+    const onPrompt = (e: Event) => {
+      e.preventDefault();
+      installPrompt.current = e as unknown as { prompt: () => Promise<void> };
+      setCanInstall(true);
+    };
+    window.addEventListener("beforeinstallprompt", onPrompt);
+    return () => window.removeEventListener("beforeinstallprompt", onPrompt);
+  }, []);
+
+  const installApp = async () => {
+    if (installPrompt.current) {
+      await installPrompt.current.prompt();
+      installPrompt.current = null;
+      setCanInstall(false);
+      return;
+    }
+    toast.info("Use your browser's Share → Add to Home Screen to pin the widget.");
+  };
+
+  const askNotifications = async () => {
+    if (typeof Notification === "undefined") {
+      toast.error("This browser doesn't support notifications");
+      return;
+    }
+    const result = await Notification.requestPermission();
+    if (result === "granted") toast.success("Notifications enabled");
+    else toast.error("Notification permission denied");
+  };
+
 
   useEffect(() => {
     if (!seeded) {
