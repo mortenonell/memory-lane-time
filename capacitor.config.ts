@@ -12,7 +12,7 @@ import type { CapacitorConfig } from "@capacitor/cli";
 const config: CapacitorConfig = {
   appId: "app.lovable.cb3b83154a6f44688ca80260229df629",
   appName: "Countdown Widgets",
-  webDir: "dist/client",
+  webDir: ".output/public",
   android: {
     allowMixedContent: false,
     backgroundColor: "#0f1115",
