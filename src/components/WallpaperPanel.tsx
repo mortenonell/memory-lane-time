@@ -1,4 +1,4 @@
-import { Plus, Shuffle, X } from "lucide-react";
+import { Images, Plus, Shuffle, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -10,7 +10,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useState } from "react";
+import { useRef, useState } from "react";
+import { toast } from "sonner";
 import type { WallpaperInterval, WallpaperSettings } from "@/lib/countdown";
 
 type Props = {
@@ -19,8 +20,33 @@ type Props = {
   onShuffle: () => void;
 };
 
+const MAX_BYTES = 2_500_000;
+
 export function WallpaperPanel({ settings, onChange, onShuffle }: Props) {
   const [url, setUrl] = useState("");
+  const fileInput = useRef<HTMLInputElement>(null);
+
+  const readFiles = async (files: FileList) => {
+    const picked = Array.from(files).filter((f) => f.type.startsWith("image/"));
+    const tooBig = picked.filter((f) => f.size > MAX_BYTES);
+    const usable = picked.filter((f) => f.size <= MAX_BYTES);
+    const dataUrls = await Promise.all(
+      usable.map(
+        (file) =>
+          new Promise<string>((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(String(reader.result));
+            reader.onerror = () => reject(reader.error);
+            reader.readAsDataURL(file);
+          }),
+      ),
+    );
+    if (dataUrls.length) {
+      onChange({ ...settings, album: [...settings.album, ...dataUrls] });
+      toast.success(`Added ${dataUrls.length} photo${dataUrls.length === 1 ? "" : "s"}`);
+    }
+    if (tooBig.length) toast.error(`${tooBig.length} photo(s) skipped — over 2.5 MB`);
+  };
 
   return (
     <section className="rounded-3xl border border-border bg-card/60 p-6 backdrop-blur">
@@ -62,23 +88,46 @@ export function WallpaperPanel({ settings, onChange, onShuffle }: Props) {
         </Button>
       </div>
 
-      <div className="mt-5 flex gap-2">
-        <Input
-          value={url}
-          placeholder="Add image URL to album"
-          onChange={(e) => setUrl(e.target.value)}
-        />
-        <Button
-          variant="outline"
-          className="gap-1"
-          onClick={() => {
-            if (!url.trim()) return;
-            onChange({ ...settings, album: [...settings.album, url.trim()] });
-            setUrl("");
-          }}
-        >
-          <Plus className="size-4" /> Add
-        </Button>
+      <div className="mt-5 space-y-3">
+        <div className="flex flex-wrap items-center gap-2">
+          <input
+            ref={fileInput}
+            type="file"
+            accept="image/*"
+            multiple
+            className="hidden"
+            onChange={(e) => {
+              if (e.target.files) void readFiles(e.target.files);
+              e.target.value = "";
+            }}
+          />
+          <Button className="gap-2" onClick={() => fileInput.current?.click()}>
+            <Images className="size-4" /> Allow photo access
+          </Button>
+          <p className="text-xs text-muted-foreground">
+            Pick photos from your device — your browser asks for permission and the images stay on
+            this device.
+          </p>
+        </div>
+
+        <div className="flex gap-2">
+          <Input
+            value={url}
+            placeholder="…or paste an image URL"
+            onChange={(e) => setUrl(e.target.value)}
+          />
+          <Button
+            variant="outline"
+            className="gap-1"
+            onClick={() => {
+              if (!url.trim()) return;
+              onChange({ ...settings, album: [...settings.album, url.trim()] });
+              setUrl("");
+            }}
+          >
+            <Plus className="size-4" /> Add
+          </Button>
+        </div>
       </div>
 
       <div className="mt-4 grid grid-cols-3 gap-3 sm:grid-cols-5">
