@@ -1,4 +1,5 @@
-import { Bell, BellOff, Pencil, Trash2 } from "lucide-react";
+import { Bell, BellOff, Maximize2, Pencil, Trash2 } from "lucide-react";
+import { Link } from "@tanstack/react-router";
 import { countdownLabel, preciseRemaining, type WidgetEvent } from "@/lib/countdown";
 
 type Props = {
@@ -52,8 +53,17 @@ export function WidgetCard({ event, now, onEdit, onDelete }: Props) {
       </div>
 
       <div className="absolute right-3 bottom-3 flex gap-1 opacity-0 transition-opacity group-hover:opacity-100 focus-within:opacity-100">
+        <Link
+          to="/widget"
+          search={{ id: event.id }}
+          aria-label={`Open ${event.title} as a full-screen widget`}
+          className="rounded-full bg-black/35 p-2 text-white backdrop-blur transition-colors hover:bg-black/55"
+        >
+          <Maximize2 className="size-4" />
+        </Link>
         <button
           aria-label={`Edit ${event.title}`}
+
           onClick={() => onEdit(event)}
           className="rounded-full bg-black/35 p-2 text-white backdrop-blur transition-colors hover:bg-black/55"
         >

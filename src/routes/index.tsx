@@ -1,6 +1,13 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { CalendarPlus, Link2, Loader2, CalendarDays } from "lucide-react";
+import {
+  CalendarPlus,
+  Link2,
+  Loader2,
+  CalendarDays,
+  Smartphone,
+  BellRing,
+} from "lucide-react";
 import { toast } from "sonner";
 import { Toaster } from "@/components/ui/sonner";
 import { Button } from "@/components/ui/button";
@@ -15,6 +22,7 @@ import { importIcsCalendar } from "@/lib/ics.functions";
 import wall1 from "@/assets/wall-1.jpg";
 import wall2 from "@/assets/wall-2.jpg";
 import wall3 from "@/assets/wall-3.jpg";
+
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -97,6 +105,39 @@ function Home() {
   const [icsUrl, setIcsUrl] = useState("");
   const [syncing, setSyncing] = useState(false);
   const notified = useRef<Set<string>>(new Set());
+  const installPrompt = useRef<{ prompt: () => Promise<void> } | null>(null);
+  const [canInstall, setCanInstall] = useState(false);
+
+  useEffect(() => {
+    const onPrompt = (e: Event) => {
+      e.preventDefault();
+      installPrompt.current = e as unknown as { prompt: () => Promise<void> };
+      setCanInstall(true);
+    };
+    window.addEventListener("beforeinstallprompt", onPrompt);
+    return () => window.removeEventListener("beforeinstallprompt", onPrompt);
+  }, []);
+
+  const installApp = async () => {
+    if (installPrompt.current) {
+      await installPrompt.current.prompt();
+      installPrompt.current = null;
+      setCanInstall(false);
+      return;
+    }
+    toast.info("Use your browser's Share → Add to Home Screen to pin the widget.");
+  };
+
+  const askNotifications = async () => {
+    if (typeof Notification === "undefined") {
+      toast.error("This browser doesn't support notifications");
+      return;
+    }
+    const result = await Notification.requestPermission();
+    if (result === "granted") toast.success("Notifications enabled");
+    else toast.error("Notification permission denied");
+  };
+
 
   useEffect(() => {
     if (!seeded) {
@@ -218,17 +259,26 @@ function Home() {
               Everything you're waiting for
             </h1>
           </div>
-          <Button
-            size="lg"
-            className="gap-2"
-            onClick={() => {
-              setEditing(null);
-              setDialogOpen(true);
-            }}
-          >
-            <CalendarPlus className="size-4" /> New widget
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            <Button variant="outline" className="gap-2" onClick={askNotifications}>
+              <BellRing className="size-4" /> Allow notifications
+            </Button>
+            <Button variant="secondary" className="gap-2" onClick={installApp}>
+              <Smartphone className="size-4" /> {canInstall ? "Install app" : "Add to home screen"}
+            </Button>
+            <Button
+              size="lg"
+              className="gap-2"
+              onClick={() => {
+                setEditing(null);
+                setDialogOpen(true);
+              }}
+            >
+              <CalendarPlus className="size-4" /> New widget
+            </Button>
+          </div>
         </header>
+
 
         <section className="mt-10 grid gap-5 sm:grid-cols-2">
           {sorted.map((event) => (
