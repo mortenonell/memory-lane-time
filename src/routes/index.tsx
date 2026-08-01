@@ -19,6 +19,13 @@ import { WallpaperPanel } from "@/components/WallpaperPanel";
 import { useLocalState } from "@/lib/store";
 import { PRESET_BACKGROUNDS, uid, type WallpaperSettings, type WidgetEvent } from "@/lib/countdown";
 import { importIcsCalendar } from "@/lib/ics.functions";
+import {
+  cancelNativeNotification,
+  isNative,
+  notificationId,
+  requestNativeNotifications,
+  scheduleNativeNotification,
+} from "@/lib/native";
 import wall1 from "@/assets/wall-1.jpg";
 import wall2 from "@/assets/wall-2.jpg";
 import wall3 from "@/assets/wall-3.jpg";
