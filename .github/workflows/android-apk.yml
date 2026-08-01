@@ -2,6 +2,7 @@ name: Build Android APK
 
 # Builds a downloadable APK. Run it from the GitHub "Actions" tab
 # (Build Android APK > Run workflow), or push to main.
+ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true
 on:
   workflow_dispatch:
   push:
