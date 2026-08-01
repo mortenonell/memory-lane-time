@@ -13,6 +13,7 @@ import {
 import { useRef, useState } from "react";
 import { toast } from "sonner";
 import type { WallpaperInterval, WallpaperSettings } from "@/lib/countdown";
+import { isNative, pickNativePhotos } from "@/lib/native";
 
 type Props = {
   settings: WallpaperSettings;
@@ -101,13 +102,31 @@ export function WallpaperPanel({ settings, onChange, onShuffle }: Props) {
               e.target.value = "";
             }}
           />
-          <Button className="gap-2" onClick={() => fileInput.current?.click()}>
+          <Button
+            className="gap-2"
+            onClick={async () => {
+              if (isNative()) {
+                try {
+                  const photos = await pickNativePhotos();
+                  if (photos.length) {
+                    onChange({ ...settings, album: [...settings.album, ...photos] });
+                    toast.success(`Added ${photos.length} photo${photos.length === 1 ? "" : "s"}`);
+                  }
+                } catch {
+                  toast.error("Photo access was denied");
+                }
+                return;
+              }
+              fileInput.current?.click();
+            }}
+          >
             <Images className="size-4" /> Allow photo access
           </Button>
           <p className="text-xs text-muted-foreground">
-            Pick photos from your device — your browser asks for permission and the images stay on
-            this device.
+            Pick photos from your gallery — Android asks for the photo permission and the images
+            stay on this device.
           </p>
+
         </div>
 
         <div className="flex gap-2">

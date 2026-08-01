@@ -19,6 +19,13 @@ import { WallpaperPanel } from "@/components/WallpaperPanel";
 import { useLocalState } from "@/lib/store";
 import { PRESET_BACKGROUNDS, uid, type WallpaperSettings, type WidgetEvent } from "@/lib/countdown";
 import { importIcsCalendar } from "@/lib/ics.functions";
+import {
+  cancelNativeNotification,
+  isNative,
+  notificationId,
+  requestNativeNotifications,
+  scheduleNativeNotification,
+} from "@/lib/native";
 import wall1 from "@/assets/wall-1.jpg";
 import wall2 from "@/assets/wall-2.jpg";
 import wall3 from "@/assets/wall-3.jpg";
@@ -129,6 +136,11 @@ function Home() {
   };
 
   const askNotifications = async () => {
+    if (isNative()) {
+      const ok = await requestNativeNotifications();
+      toast[ok ? "success" : "error"](ok ? "Notifications enabled" : "Notification permission denied");
+      return;
+    }
     if (typeof Notification === "undefined") {
       toast.error("This browser doesn't support notifications");
       return;
@@ -137,6 +149,25 @@ function Home() {
     if (result === "granted") toast.success("Notifications enabled");
     else toast.error("Notification permission denied");
   };
+
+  // Android: hand each reminder to the OS so it fires with the app closed.
+  useEffect(() => {
+    if (!isNative()) return;
+    for (const e of events) {
+      const id = notificationId(e.id);
+      if (!e.notify) {
+        void cancelNativeNotification(id).catch(() => {});
+        continue;
+      }
+      void scheduleNativeNotification({
+        id,
+        title: e.title,
+        body: `Starts ${new Date(e.date).toLocaleString()}`,
+        at: new Date(new Date(e.date).getTime() - e.notifyLeadMinutes * 60_000),
+      }).catch(() => {});
+    }
+  }, [events]);
+
 
 
   useEffect(() => {
