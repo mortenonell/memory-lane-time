@@ -17,7 +17,14 @@ import { WidgetCard } from "@/components/WidgetCard";
 import { EventDialog } from "@/components/EventDialog";
 import { WallpaperPanel } from "@/components/WallpaperPanel";
 import { useLocalState } from "@/lib/store";
-import { PRESET_BACKGROUNDS, uid, type WallpaperSettings, type WidgetEvent } from "@/lib/countdown";
+import {
+  PRESET_BACKGROUNDS,
+  activeAlbumPhotos,
+  normalizeWallpaper,
+  uid,
+  type WallpaperSettings,
+  type WidgetEvent,
+} from "@/lib/countdown";
 import { importIcsCalendar } from "@/lib/ics.functions";
 import {
   cancelNativeNotification,
