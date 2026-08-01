@@ -129,6 +129,11 @@ function Home() {
   };
 
   const askNotifications = async () => {
+    if (isNative()) {
+      const ok = await requestNativeNotifications();
+      toast[ok ? "success" : "error"](ok ? "Notifications enabled" : "Notification permission denied");
+      return;
+    }
     if (typeof Notification === "undefined") {
       toast.error("This browser doesn't support notifications");
       return;
@@ -137,6 +142,25 @@ function Home() {
     if (result === "granted") toast.success("Notifications enabled");
     else toast.error("Notification permission denied");
   };
+
+  // Android: hand each reminder to the OS so it fires with the app closed.
+  useEffect(() => {
+    if (!isNative()) return;
+    for (const e of events) {
+      const id = notificationId(e.id);
+      if (!e.notify) {
+        void cancelNativeNotification(id).catch(() => {});
+        continue;
+      }
+      void scheduleNativeNotification({
+        id,
+        title: e.title,
+        body: `Starts ${new Date(e.date).toLocaleString()}`,
+        at: new Date(new Date(e.date).getTime() - e.notifyLeadMinutes * 60_000),
+      }).catch(() => {});
+    }
+  }, [events]);
+
 
 
   useEffect(() => {
