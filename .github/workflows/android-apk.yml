@@ -1,0 +1,95 @@
+name: Build Android APK
+
+# Builds a downloadable APK. Run it from the GitHub "Actions" tab
+# (Build Android APK > Run workflow), or push to main.
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - uses: android-actions/setup-android@v3
+
+      - name: Install dependencies
+        run: npm install --legacy-peer-deps
+
+      - name: Build web bundle
+        run: npm run build
+
+      - name: Add Android platform
+        run: npx cap add android || npx cap sync android
+
+      - name: Target Android 13+ (OxygenOS 13.1+)
+        run: |
+          cat > android/variables.gradle <<'EOF'
+          ext {
+              minSdkVersion = 33
+              compileSdkVersion = 35
+              targetSdkVersion = 35
+              androidxActivityVersion = '1.9.2'
+              androidxAppCompatVersion = '1.7.0'
+              androidxCoreVersion = '1.15.0'
+              androidxFragmentVersion = '1.8.4'
+              coreSplashScreenVersion = '1.0.1'
+              androidxWebkitVersion = '1.12.1'
+              junitVersion = '4.13.2'
+              androidxJunitVersion = '1.2.1'
+              androidxEspressoCoreVersion = '3.6.1'
+              cordovaAndroidVersion = '10.1.1'
+          }
+          EOF
+
+      - name: Add runtime permissions to manifest
+        run: |
+          python3 - <<'EOF'
+          import re
+          p = "android/app/src/main/AndroidManifest.xml"
+          s = open(p).read()
+          perms = [
+              "android.permission.POST_NOTIFICATIONS",
+              "android.permission.READ_MEDIA_IMAGES",
+              "android.permission.SCHEDULE_EXACT_ALARM",
+              "android.permission.RECEIVE_BOOT_COMPLETED",
+              "android.permission.INTERNET",
+          ]
+          block = "\n".join(f'    <uses-permission android:name="{x}" />' for x in perms if x not in s)
+          if block:
+              s = s.replace("</manifest>", block + "\n</manifest>")
+          open(p, "w").write(s)
+          EOF
+
+      - name: Sync Capacitor
+        run: npx cap sync android
+
+      - name: Assemble debug APK
+        run: cd android && chmod +x gradlew && ./gradlew assembleDebug
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: countdown-widgets-apk
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+
+      - name: Publish APK to a downloadable release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: apk-${{ github.run_number }}
+          name: Countdown Widgets APK ${{ github.run_number }}
+          files: android/app/build/outputs/apk/debug/app-debug.apk
